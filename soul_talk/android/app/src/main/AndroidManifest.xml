@@ -1,12 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
-        android:label="chool_check"
+        android:label="soul_talk"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyALsHleHaPb2bAMda_8PmSPvMt_6dbnfm4"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
