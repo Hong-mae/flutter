@@ -33,7 +33,6 @@ class AuthRepository {
     final result = await _dio.post(
       '$_targetUrl/login/email',
       options: Options(headers: {'authorization': 'Basic $encoded'}),
-      // data: {'email': email, 'password': password},
     );
 
     return (

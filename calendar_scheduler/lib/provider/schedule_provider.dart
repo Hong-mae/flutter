@@ -21,12 +21,13 @@ class ScheduleProvider extends ChangeNotifier {
   ScheduleProvider({
     required this.authRepository,
     required this.scheduleRepository,
-  }) : super() {
-    getSchedules(date: selectedDate);
-  }
+  });
 
   void getSchedules({required DateTime date}) async {
-    final resp = await scheduleRepository.getSchedules(date: date);
+    final resp = await scheduleRepository.getSchedules(
+      date: date,
+      accessToken: accessToken!,
+    );
 
     cache.update(date, (value) => resp, ifAbsent: () => resp);
 
@@ -54,6 +55,7 @@ class ScheduleProvider extends ChangeNotifier {
     try {
       final savedSchedule = await scheduleRepository.createSchedule(
         schedule: schedule,
+        accessToken: accessToken!,
       );
 
       cache.update(
@@ -81,7 +83,10 @@ class ScheduleProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await scheduleRepository.deleteSchedule(id: id);
+      await scheduleRepository.deleteSchedule(
+        id: id,
+        accessToken: accessToken!,
+      );
     } catch (e) {
       cache.update(
         date,

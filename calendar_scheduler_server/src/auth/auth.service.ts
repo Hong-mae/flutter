@@ -1,8 +1,12 @@
-import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { v4 as uuid } from "uuid";
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { v4 as uuid } from 'uuid';
 
-const JWT_SECRET = "codefactory";
+const JWT_SECRET = 'codefactory';
 
 export class UserModel {
   id: string;
@@ -15,22 +19,19 @@ export class UserModel {
 export class AuthService {
   users: UserModel[] = [];
 
-  constructor(
-    private readonly jwtService: JwtService
-  ) {
-  }
+  constructor(private readonly jwtService: JwtService) {}
 
   extractTokenFromHeader(header: string, isBearer: boolean) {
     // 'Basic {token}'
     // [Basic, {token}]
     // 'Bearer {token}'
     // [Bearer, {token}]
-    const splitToken = header.split(" ");
+    const splitToken = header.split(' ');
 
-    const prefix = isBearer ? "Bearer" : "Basic";
+    const prefix = isBearer ? 'Bearer' : 'Basic';
 
     if (splitToken.length !== 2 || splitToken[0] !== prefix) {
-      throw new UnauthorizedException("잘못된 토큰입니다!");
+      throw new UnauthorizedException('잘못된 토큰입니다!');
     }
 
     const token = splitToken[1];
@@ -38,14 +39,13 @@ export class AuthService {
     return token;
   }
 
-
   decodeBasicToken(base64String: string) {
-    const decoded = Buffer.from(base64String, "base64").toString("utf8");
+    const decoded = Buffer.from(base64String, 'base64').toString('utf8');
 
-    const split = decoded.split(":");
+    const split = decoded.split(':');
 
     if (split.length !== 2) {
-      throw new UnauthorizedException("잘못된 유형의 토큰입니다.");
+      throw new UnauthorizedException('잘못된 유형의 토큰입니다.');
     }
 
     const email = split[0];
@@ -53,23 +53,23 @@ export class AuthService {
 
     return {
       email,
-      password
+      password,
     };
   }
 
   verifyToken(token: string) {
     try {
       return this.jwtService.verify(token, {
-        secret: JWT_SECRET
+        secret: JWT_SECRET,
       });
     } catch (e) {
-      throw new UnauthorizedException("토큰이 만료됐거나 잘못된 토큰입니다.");
+      throw new UnauthorizedException('토큰이 만료됐거나 잘못된 토큰입니다.');
     }
   }
 
   rotateToken(token: string, isRefreshToken: boolean) {
     const decoded = this.jwtService.verify(token, {
-      secret: JWT_SECRET
+      secret: JWT_SECRET,
     });
 
     /**
@@ -77,38 +77,43 @@ export class AuthService {
      * email: email,
      * type: 'access' | 'refresh'
      */
-    if (decoded.type !== "refresh") {
-      throw new UnauthorizedException("토큰 재발급은 Refresh 토큰으로만 가능합니다!");
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException(
+        '토큰 재발급은 Refresh 토큰으로만 가능합니다!',
+      );
     }
 
-    return this.signToken({
-      ...decoded
-    }, isRefreshToken);
+    return this.signToken(
+      {
+        ...decoded,
+      },
+      isRefreshToken,
+    );
   }
 
-  signToken(user: Pick<UserModel, "email" | "id">, isRefreshToken: boolean) {
+  signToken(user: Pick<UserModel, 'email' | 'id'>, isRefreshToken: boolean) {
     const payload = {
       email: user.email,
       sub: user.id,
-      type: isRefreshToken ? "refresh" : "access"
+      type: isRefreshToken ? 'refresh' : 'access',
     };
 
     return this.jwtService.sign(payload, {
       secret: JWT_SECRET,
       // seconds
-      expiresIn: isRefreshToken ? 3600 : 300
+      expiresIn: isRefreshToken ? 3600 : 300,
     });
   }
 
-  loginUser(user: { email: string, id: string }) {
+  loginUser(user: { email: string; id: string }) {
     return {
       accessToken: this.signToken(user, false),
-      refreshToken: this.signToken(user, true)
+      refreshToken: this.signToken(user, true),
     };
   }
 
   getUserByEmail(email: string) {
-    const result = this.users.filter(user => user.email === email);
+    const result = this.users.filter((user) => user.email === email);
 
     if (result.length === 0) {
       return null;
@@ -117,7 +122,9 @@ export class AuthService {
     return result[0];
   }
 
-  async authenticateWithEmailAndPassword(user: Pick<UserModel, "email" | "password">) {
+  async authenticateWithEmailAndPassword(
+    user: Pick<UserModel, 'email' | 'password'>,
+  ) {
     /**
      * 1. 사용자가 존재하는지 확인 (email)
      * 2. 비밀번호가 맞는지 확인
@@ -126,7 +133,7 @@ export class AuthService {
     const existingUser = this.getUserByEmail(user.email);
 
     if (!existingUser) {
-      throw new UnauthorizedException("존재하지 않는 사용자입니다.");
+      throw new UnauthorizedException('존재하지 않는 사용자입니다.');
     }
 
     /**
@@ -138,34 +145,34 @@ export class AuthService {
     const passOk = existingUser.password === user.password;
 
     if (!passOk) {
-      throw new UnauthorizedException("비밀번호가 틀렸습니다.");
+      throw new UnauthorizedException('비밀번호가 틀렸습니다.');
     }
 
     return existingUser;
   }
 
-  async loginWithEmail(user: Pick<UserModel, "email" | "password">) {
+  async loginWithEmail(user: Pick<UserModel, 'email' | 'password'>) {
     const existingUser = await this.authenticateWithEmailAndPassword(user);
 
     return this.loginUser(existingUser);
   }
 
-  async registerWithEmail(user: Pick<UserModel, "email" | "password">) {
-    console.log(this.users);
-    if (this.users.some(existing => existing.email === user.email)) {
-      throw new BadRequestException("이미 가입한 이메일입니다.");
+  async registerWithEmail(user: Pick<UserModel, 'email' | 'password'>) {
+    if (this.users.some((existing) => existing.email === user.email)) {
+      throw new BadRequestException('이미 가입한 이메일입니다.');
     }
 
     const newUser: UserModel = {
       id: uuid(),
       ...user,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
-    this.users = [
-      ...this.users,
-      newUser
-    ];
+    this.users = [...this.users, newUser];
+
+    console.log('----------------------register---------------------');
+    console.log(this.users);
+    console.log('----------------------register---------------------');
 
     return this.loginUser(newUser);
   }
