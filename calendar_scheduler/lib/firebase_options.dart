@@ -70,6 +70,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '561040616522',
     projectId: 'calendar-scheduler-9cd88',
     storageBucket: 'calendar-scheduler-9cd88.firebasestorage.app',
+    androidClientId: '561040616522-89g6b0lbma42sabkra6fvm5q5nj64bna.apps.googleusercontent.com',
+    iosClientId: '561040616522-cftn74r7941hpkt7g1ksvc5lm9n74i35.apps.googleusercontent.com',
     iosBundleId: 'com.hongmae.calendarScheduler',
   );
+
 }

@@ -1,36 +1,39 @@
+import 'package:flutter/material.dart';
 import 'package:calendar_scheduler/component/custom_text_field.dart';
 import 'package:calendar_scheduler/const/colors.dart';
 import 'package:calendar_scheduler/model/schedule_model.dart';
-import 'package:calendar_scheduler/provider/schedule_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ScheduleBottomSheet extends StatefulWidget {
   final DateTime selectedDate;
-  const ScheduleBottomSheet({super.key, required this.selectedDate});
+
+  const ScheduleBottomSheet({required this.selectedDate, super.key});
 
   @override
   State<ScheduleBottomSheet> createState() => _ScheduleBottomSheetState();
 }
 
 class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> formKey = GlobalKey();
 
-  int? startTime;
-  int? endTime;
-  String? content;
+  int? start_time; // 시작 시간 저장 변수
+  int? end_time; // 종료 시간 저장 변수
+  String? content; // 일정 내용 저장 변수
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Form(
-      key: _formKey,
+      // ➊ 텍스트 필드를 한 번에 관리할 수 있는 폼
+      key: formKey, // ➋ Form을 조작할 키값
       child: SafeArea(
         child: Container(
-          height: MediaQuery.of(context).size.height / 2 + bottomInset,
+          height:
+              MediaQuery.of(context).size.height / 2 +
+              bottomInset, // ➋ 화면 반 높이에 키보드 높이 추가하기
           color: Colors.white,
           child: Padding(
             padding: EdgeInsets.only(
@@ -40,38 +43,46 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
               bottom: bottomInset,
             ),
             child: Column(
+              // ➋ 시간 관련 텍스트 필드와 내용관련 텍스트 필드 세로로 배치
               children: [
                 Row(
+                  // ➊ 시작 시간 종료 시간 가로로 배치
                   children: [
                     Expanded(
                       child: CustomTextField(
-                        label: "시작 시간",
+                        // 시작시간 입력 필드
+                        label: '시작 시간',
                         isTime: true,
                         onSaved: (String? val) {
-                          startTime = int.tryParse(val!);
+                          // 저장이 실행되면 start_time 변수에 텍스트 필드 값 저장
+                          start_time = int.parse(val!);
                         },
                         validator: timeValidator,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 16.0),
                     Expanded(
                       child: CustomTextField(
-                        label: "종료 시간",
+                        // 종료시간 입력 필드
+                        label: '종료 시간',
                         isTime: true,
                         onSaved: (String? val) {
-                          endTime = int.tryParse(val!);
+                          // 저장이 실행되면 end_time 변수에 텍스트 필드 값 저장
+                          end_time = int.parse(val!);
                         },
                         validator: timeValidator,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: 8.0),
                 Expanded(
                   child: CustomTextField(
-                    label: "내용",
+                    // 내용 입력 필드
+                    label: '내용',
                     isTime: false,
                     onSaved: (String? val) {
+                      // 저장이 실행되면 content 변수에 텍스트 필드 값 저장
                       content = val;
                     },
                     validator: contentValidator,
@@ -80,11 +91,13 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    // [저장] 버튼
+                    // ➌ [저장] 버튼
                     onPressed: () => onSavePressed(context),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: PRIMARY_COLOR,
                     ),
-                    child: Text("저장"),
+                    child: Text('저장'),
                   ),
                 ),
               ],
@@ -96,30 +109,25 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
   }
 
   void onSavePressed(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+    if (formKey.currentState!.validate()) {
+      // ➊ 폼 검증하기
+      formKey.currentState!.save(); // ➋ 폼 저장하기
 
-      context.read<ScheduleProvider>().createSchedule(
-        schedule: ScheduleModel(
-          id: "new_model",
-          content: content!,
-          date: widget.selectedDate,
-          startTime: startTime!,
-          endTime: endTime!,
-        ),
+      final schedule = ScheduleModel(
+        id: Uuid().v4(),
+        content: content!,
+        date: widget.selectedDate,
+        start_time: start_time!,
+        end_time: end_time!,
       );
-      // final schedule = ScheduleModel(
-      //   id: Uuid().v4(),
-      //   content: content!,
-      //   date: widget.selectedDate,
-      //   startTime: startTime!,
-      //   endTime: endTime!,
-      // );
 
-      // await FirebaseFirestore.instance
-      //     .collection('schedule')
-      //     .doc(schedule.id)
-      //     .set(schedule.toJson());
+      // Supabase 인스턴스 불러오기
+      final supabase = Supabase.instance.client;
+
+      print(schedule.toJson());
+
+      // Supabase schedule 테이블에 데이터 삽입
+      await supabase.from('schedule').insert(schedule.toJson());
 
       Navigator.of(context).pop();
     }
@@ -127,7 +135,7 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
 
   String? timeValidator(String? val) {
     if (val == null) {
-      return "시간을 입력해주세요.";
+      return '값을 입력해주세요';
     }
 
     int? number;
@@ -135,21 +143,21 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
     try {
       number = int.parse(val);
     } catch (e) {
-      return "시간은 숫자만 입력 가능합니다.";
+      return '숫자를 입력해주세요';
     }
 
     if (number < 0 || number > 24) {
-      return "시간은 0~24 사이의 숫자만 입력 가능합니다.";
+      return '0시부터 24시 사이를 입력해주세요';
     }
 
     return null;
-  }
+  } // 시간값 검증
 
   String? contentValidator(String? val) {
     if (val == null || val.isEmpty) {
-      return "내용을 입력해주세요.";
+      return '값을 입력해주세요';
     }
 
     return null;
-  }
+  } // 내용값 검증
 }

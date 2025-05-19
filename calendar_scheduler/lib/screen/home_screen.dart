@@ -1,180 +1,134 @@
-import "package:calendar_scheduler/component/main_calendar.dart";
-import "package:calendar_scheduler/component/schedule_bottom_sheet.dart";
-import "package:calendar_scheduler/component/schedule_card.dart";
-import "package:calendar_scheduler/component/today_banner.dart";
-import "package:calendar_scheduler/const/colors.dart";
-import "package:calendar_scheduler/model/schedule_model.dart";
-import "package:calendar_scheduler/provider/schedule_provider.dart";
-import "package:calendar_scheduler/utils/logger.dart";
-import "package:cloud_firestore/cloud_firestore.dart";
-import "package:flutter/material.dart";
-import "package:provider/provider.dart";
+import 'package:calendar_scheduler/model/schedule_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:calendar_scheduler/component/main_calendar.dart';
+import 'package:calendar_scheduler/component/schedule_card.dart';
+import 'package:calendar_scheduler/component/today_banner.dart';
+import 'package:calendar_scheduler/component/schedule_bottom_sheet.dart';
+import 'package:calendar_scheduler/const/colors.dart';
+import 'package:get_it/get_it.dart';
+import 'package:calendar_scheduler/db/drift_db.dart';
+import 'package:provider/provider.dart'; // ➊ Provider 불러오기
+import 'package:calendar_scheduler/provider/schedule_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
   @override
-  State<StatefulWidget> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   DateTime selectedDate = DateTime.utc(
+    // ➋ 선택된 날짜를 관리할 변수
     DateTime.now().year,
     DateTime.now().month,
     DateTime.now().day,
   );
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    final provider =
-        context.read<ScheduleProvider>(); // ➋ 프로바이더 변경이 있을 때마다 build() 함수 재실행
-    provider.getSchedules(date: selectedDate);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider =
-        context.watch<ScheduleProvider>(); // ➋ 프로바이더 변경이 있을 때마다 build() 함수 재실행
-    final selectedDate = provider.selectedDate; // ➌ 선택된 날짜 가져오기
-    final schedules = provider.cache[selectedDate] ?? [];
+    final future = Supabase.instance.client.from('schedule').select().eq('date',
+        '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}');
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        // ➊ 새 일정 버튼
         backgroundColor: PRIMARY_COLOR,
-        onPressed: () {
-          showModalBottomSheet(
+        onPressed: () async {
+          await showModalBottomSheet(
+            // ➋ BottomSheet 열기
             context: context,
-            isDismissible: true,
-            builder: (_) => ScheduleBottomSheet(selectedDate: selectedDate),
+            isDismissible: true, // ➌ 배경 탭했을 때 BottomSheet 닫기
             isScrollControlled: true,
+            builder: (_) => ScheduleBottomSheet(
+              selectedDate: selectedDate, // 선택된 날짜 (selectedDate) 넘겨주기
+            ),
           );
+
+          setState(() {});
         },
-        child: Icon(Icons.add, color: Colors.white),
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
       body: SafeArea(
+        // 시스템 UI 피해서 UI 구현하기
         child: Column(
+          // 달력과 리스트를 세로로 배치
           children: [
             MainCalendar(
-              selectedDate: selectedDate,
-              onDaySelected: (selectedDate, focusedDate) {
-                return onDaySelected(selectedDate, focusedDate, context);
-              },
+              selectedDate: selectedDate, // 선택된 날짜 전달하기
+
+              // 날짜가 선택됐을 때 실행할 함수
+              onDaySelected: (selectedDate, focusedDate) => onDaySelected(selectedDate, focusedDate, context),
             ),
-            // SizedBox(height: 8.0),
-            // StreamBuilder<QuerySnapshot>(
-            //   stream:
-            //       FirebaseFirestore.instance
-            //           .collection('schedule')
-            //           .where(
-            //             'date',
-            //             isEqualTo:
-            //                 '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}',
-            //           )
-            //           .snapshots(),
-            //   builder: (context, snapshot) {
-            //     return TodayBanner(
-            //       selectedDate: selectedDate,
-            //       count: snapshot.data?.docs.length ?? 0,
-            //     );
-            //   },
-            // ),
-            TodayBanner(
-              // ➊ 배너 추가하기
-              selectedDate: selectedDate,
-              count: 0,
+            SizedBox(height: 8.0),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              // ListView에 적용했던 같은 쿼리
+              future: future,
+              builder: (context, snapshot) {
+                return TodayBanner(
+                  selectedDate: selectedDate,
+
+                  // ➊ 개수 가져오기
+                  count: snapshot.data?.length ?? 0,
+                );
+              },
             ),
             SizedBox(height: 8.0),
             Expanded(
-              child: ListView.builder(
-                itemCount: schedules.length,
-                itemBuilder: (context, index) {
-                  final schedule = schedules[index];
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                // ➊ 파이어스토어로부터 일정 정보 받아오기
+                future: future,
+                builder: (context, snapshot) {
+                  // Stream을 가져오는 동안 에러가 났을 때 보여줄 화면
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('일정 정보를 가져오지 못했습니다.'),
+                    );
+                  }
 
-                  return Dismissible(
-                    key: ObjectKey(schedule.id),
-                    direction: DismissDirection.startToEnd,
-                    onDismissed: (DismissDirection direction) {
-                      provider.deleteSchedule(
-                        date: selectedDate,
-                        id: schedule.id,
-                      ); // ➊
+                  // 로딩 중일 때 보여줄 화면
+                  if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+                    return Container();
+                  }
+
+                  // ➋ ScheduleModel로 데이터 매핑하기
+                  final schedules = snapshot.data!
+                      .map(
+                        (e) => ScheduleModel.fromJson(json: e),
+                  )
+                      .toList();
+
+                  return ListView.builder(
+                    itemCount: schedules.length,
+                    itemBuilder: (context, index) {
+                      final schedule = schedules[index];
+
+                      return Dismissible(
+                        key: ObjectKey(schedule.id),
+                        direction: DismissDirection.startToEnd,
+                        onDismissed: (DismissDirection direction) async{
+                          await Supabase.instance.client.from('schedule').delete().match({
+                            'id': schedule.id,
+                          });
+
+                          setState(() {});
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
+                          child: ScheduleCard(
+                            start_time: schedule.start_time,
+                            end_time: schedule.end_time,
+                            content: schedule.content,
+                          ),
+                        ),
+                      );
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 8.0,
-                        left: 8.0,
-                        right: 8.0,
-                      ),
-                      child: ScheduleCard(
-                        startTime: schedule.startTime,
-                        endTime: schedule.endTime,
-                        content: schedule.content,
-                      ),
-                    ),
                   );
                 },
               ),
-              // child: StreamBuilder<QuerySnapshot>(
-              //   stream:
-              //       FirebaseFirestore.instance
-              //           .collection('schedule')
-              //           .where(
-              //             'date',
-              //             isEqualTo:
-              //                 '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}',
-              //           )
-              //           .snapshots(),
-              //   builder: (context, snapshot) {
-              //     if (snapshot.hasError) {
-              //       return Center(child: Text("일정 정보를 가져오지 못했습니다."));
-              //     }
-
-              //     if (snapshot.connectionState == ConnectionState.waiting) {
-              //       return Container();
-              //     }
-
-              //     final schedules =
-              //         snapshot.data!.docs
-              //             .map(
-              //               (QueryDocumentSnapshot e) => ScheduleModel.fromJson(
-              //                 json: (e.data() as Map<String, dynamic>),
-              //               ),
-              //             )
-              //             .toList();
-
-              //     return ListView.builder(
-              //       itemCount: schedules.length,
-              //       itemBuilder: (context, index) {
-              //         final schedule = schedules[index];
-
-              //         return Dismissible(
-              //           key: ObjectKey(schedule.id),
-              //           direction: DismissDirection.endToStart,
-              //           onDismissed: (DismissDirection direction) {
-              //             FirebaseFirestore.instance
-              //                 .collection('schedule')
-              //                 .doc(schedule.id)
-              //                 .delete();
-              //           },
-              //           child: Padding(
-              //             padding: const EdgeInsets.only(
-              //               bottom: 8.0,
-              //               left: 8.0,
-              //               right: 8.0,
-              //             ),
-              //             child: ScheduleCard(
-              //               startTime: schedule.startTime,
-              //               endTime: schedule.endTime,
-              //               content: schedule.content,
-              //             ),
-              //           ),
-              //         );
-              //       },
-              //     );
-              //   },
-              // ),
             ),
           ],
         ),
@@ -183,16 +137,197 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void onDaySelected(
-    DateTime selectedDate,
-    DateTime focusedDate,
-    BuildContext context,
-  ) {
-    final provider = context.read<ScheduleProvider>();
-    provider.changeSelectedDate(date: selectedDate);
-    provider.getSchedules(date: selectedDate);
-
+      DateTime selectedDate,
+      DateTime focusedDate,
+      BuildContext context,
+      ) {
     setState(() {
       this.selectedDate = selectedDate;
     });
   }
 }
+
+
+// import "package:calendar_scheduler/component/main_calendar.dart";
+// import "package:calendar_scheduler/component/schedule_bottom_sheet.dart";
+// import "package:calendar_scheduler/component/schedule_card.dart";
+// import "package:calendar_scheduler/component/today_banner.dart";
+// import "package:calendar_scheduler/const/colors.dart";
+// import "package:calendar_scheduler/model/schedule_model.dart";
+// import "package:cloud_firestore/cloud_firestore.dart";
+// import "package:firebase_auth/firebase_auth.dart";
+// import "package:flutter/material.dart";
+// import "package:supabase_flutter/supabase_flutter.dart";
+//
+// class HomeScreen extends StatefulWidget {
+//   const HomeScreen({super.key});
+//
+//   @override
+//   State<StatefulWidget> createState() => _HomeScreenState();
+// }
+//
+// class _HomeScreenState extends State<HomeScreen> {
+//   DateTime selectedDate = DateTime.utc(
+//     DateTime.now().year,
+//     DateTime.now().month,
+//     DateTime.now().day,
+//   );
+//
+//   // @override
+//   // void initState() {
+//   //   super.initState();
+//   //   final provider =
+//   //       context.read<ScheduleProvider>(); // ➋ 프로바이더 변경이 있을 때마다 build() 함수 재실행
+//   //   provider.getSchedules(date: selectedDate);
+//   // }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final future = Supabase.instance.client.from('schedule').select().eq('date',
+//         '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}');
+//
+//     return Scaffold(
+//       floatingActionButton: FloatingActionButton(
+//         backgroundColor: PRIMARY_COLOR,
+//         onPressed: () {
+//           showModalBottomSheet(
+//             context: context,
+//             isDismissible: true,
+//             builder: (_) => ScheduleBottomSheet(selectedDate: selectedDate),
+//             isScrollControlled: true,
+//           );
+//
+//           setState(() {});
+//         },
+//         child: Icon(Icons.add, color: Colors.white),
+//       ),
+//       body: SafeArea(
+//         child: Column(
+//           children: [
+//             MainCalendar(
+//               selectedDate: selectedDate,
+//               onDaySelected: (selectedDate, focusedDate) {
+//                 return onDaySelected(selectedDate, focusedDate, context);
+//               },
+//             ),
+//             SizedBox(height: 8.0),
+//             FutureBuilder<List<Map<String, dynamic>>>(
+//               // ListView에 적용했던 같은 쿼리
+//               future: future,
+//               builder: (context, snapshot) {
+//                 return TodayBanner(
+//                   selectedDate: selectedDate,
+//
+//                   // ➊ 개수 가져오기
+//                   count: snapshot.data?.length ?? 0,
+//                 );
+//               },
+//             ),
+//             // TodayBanner(
+//             //   // ➊ 배너 추가하기
+//             //   selectedDate: selectedDate,
+//             //   count: 0,
+//             // ),
+//             SizedBox(height: 8.0),
+//             Expanded(
+//               // child: ListView.builder(
+//               //   itemCount: schedules.length,
+//               //   itemBuilder: (context, index) {
+//               //     final schedule = schedules[index];
+//
+//               //     return Dismissible(
+//               //       key: ObjectKey(schedule.id),
+//               //       direction: DismissDirection.startToEnd,
+//               //       onDismissed: (DismissDirection direction) {
+//               //         provider.deleteSchedule(
+//               //           date: selectedDate,
+//               //           id: schedule.id,
+//               //         );
+//               //       },
+//               //       child: Padding(
+//               //         padding: const EdgeInsets.only(
+//               //           bottom: 8.0,
+//               //           left: 8.0,
+//               //           right: 8.0,
+//               //         ),
+//               //         child: ScheduleCard(
+//               //           start_time: schedule.start_time,
+//               //           end_time: schedule.end_time,
+//               //           content: schedule.content,
+//               //         ),
+//               //       ),
+//               //     );
+//               //   },
+//               // ),
+//               child: FutureBuilder<List<Map<String, dynamic>>>(
+//                 // ➊ 파이어스토어로부터 일정 정보 받아오기
+//                 future: future,
+//                 builder: (context, snapshot) {
+//                   // Stream을 가져오는 동안 에러가 났을 때 보여줄 화면
+//                   if (snapshot.hasError) {
+//                     return Center(
+//                       child: Text('일정 정보를 가져오지 못했습니다.'),
+//                     );
+//                   }
+//
+//                   // 로딩 중일 때 보여줄 화면
+//                   if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+//                     return Container();
+//                   }
+//
+//                   // ➋ ScheduleModel로 데이터 매핑하기
+//                   final schedules = snapshot.data!
+//                       .map(
+//                         (e) => ScheduleModel.fromJson(json: e),
+//                   )
+//                       .toList();
+//
+//                   return ListView.builder(
+//                     itemCount: schedules.length,
+//                     itemBuilder: (context, index) {
+//                       final schedule = schedules[index];
+//
+//                       return Dismissible(
+//                         key: ObjectKey(schedule.id),
+//                         direction: DismissDirection.startToEnd,
+//                         onDismissed: (DismissDirection direction) async{
+//                           await Supabase.instance.client.from('schedule').delete().match({
+//                             'id': schedule.id,
+//                           });
+//
+//                           setState(() {});
+//                         },
+//                         child: Padding(
+//                           padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
+//                           child: ScheduleCard(
+//                             start_time: schedule.start_time,
+//                             end_time: schedule.end_time,
+//                             content: schedule.content,
+//                           ),
+//                         ),
+//                       );
+//                     },
+//                   );
+//                 },
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void onDaySelected(
+//     DateTime selectedDate,
+//     DateTime focusedDate,
+//     BuildContext context,
+//   ) {
+//     // final provider = context.read<ScheduleProvider>();
+//     // provider.changeSelectedDate(date: selectedDate);
+//     // provider.getSchedules(date: selectedDate);
+//
+//     setState(() {
+//       this.selectedDate = selectedDate;
+//     });
+//   }
+// }
