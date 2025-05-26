@@ -18,7 +18,7 @@ class TodayBanner extends StatelessWidget {
 
     final textStyle = TextStyle(
       fontWeight: FontWeight.w600,
-      color: Colors.white,
+      color: Colors.white,ss
     );
 
     return Container(
