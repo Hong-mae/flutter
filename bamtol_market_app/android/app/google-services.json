@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1060292158063",
+    "project_id": "bamtol-market-hongmae",
+    "storage_bucket": "bamtol-market-hongmae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060292158063:android:e02bdf2acfac4919da239a",
+        "android_client_info": {
+          "package_name": "com.hongmae.bamtol_market_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWJ2Yk7wXc32PF-josZVuexMRp-WWwqak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060292158063:android:b08499b6f46cb1a9da239a",
+        "android_client_info": {
+          "package_name": "com.hongmae.cloneapp.bamtol_market_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWJ2Yk7wXc32PF-josZVuexMRp-WWwqak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
