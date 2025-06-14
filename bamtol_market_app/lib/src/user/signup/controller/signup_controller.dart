@@ -18,7 +18,6 @@ class SignupController extends GetxController {
   }
 
   changeNickName(String nickName) {
-    logger
     userNickName(nickName);
   }
 
