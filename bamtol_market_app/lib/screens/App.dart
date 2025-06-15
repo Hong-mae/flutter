@@ -21,6 +21,15 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    return isInitStarted ? InitStartPage() : SplashPage();
+    return isInitStarted
+        ? InitStartPage(
+            onStart: () {
+              setState(() {
+                isInitStarted = false;
+              });
+              prefs.setBool('isInitStarted', isInitStarted);
+            },
+          )
+        : SplashPage();
   }
 }
