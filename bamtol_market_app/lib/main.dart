@@ -1,10 +1,17 @@
 import 'package:bamtol_market_app/controllers/authentication_controller.dart';
 import 'package:bamtol_market_app/controllers/data_load_controller.dart';
+import 'package:bamtol_market_app/controllers/login_controller.dart';
+import 'package:bamtol_market_app/controllers/signup_controller.dart';
 import 'package:bamtol_market_app/firebase_options.dart';
 import 'package:bamtol_market_app/pages/app.dart';
 import 'package:bamtol_market_app/controllers/splash_controller.dart';
 import 'package:bamtol_market_app/pages/home_page.dart';
 import 'package:bamtol_market_app/pages/login_page.dart';
+import 'package:bamtol_market_app/pages/signup_page.dart';
+import 'package:bamtol_market_app/repository/authentication_repository.dart';
+import 'package:bamtol_market_app/repository/user_repository.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -24,6 +31,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var db = FirebaseFirestore.instance;
+
     return GetMaterialApp(
       title: "당근마켓 클론 코딩",
       initialRoute: '/',
@@ -37,15 +46,44 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xff212123),
       ),
       initialBinding: BindingsBuilder(() {
+        var authenticationRepository = AuthenticationRepository(
+          FirebaseAuth.instance,
+        );
+        var userRepository = UserRepository(db);
+        Get.put(authenticationRepository);
+        Get.put(userRepository);
+
         Get.put(SplashController());
 
         Get.put(DataLoadController());
-        Get.put(AuthenticationController());
+        Get.put(
+          AuthenticationController(authenticationRepository, userRepository),
+        );
       }),
       getPages: [
         GetPage(name: '/', page: () => const App()),
         GetPage(name: "/home", page: () => const HomePage()),
-        GetPage(name: '/login', page: () => const LoginPage()),
+        GetPage(
+          name: '/login',
+          page: () => const LoginPage(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut<LoginController>(
+              () => LoginController(Get.find<AuthenticationRepository>()),
+            );
+          }),
+        ),
+        GetPage(
+          name: "/signup/:uid",
+          page: () => const SignupPage(),
+          binding: BindingsBuilder(() {
+            Get.lazyPut<SignupController>(
+              () => SignupController(
+                Get.find<UserRepository>(),
+                Get.parameters['uid'] as String,
+              ),
+            );
+          }),
+        ),
       ],
     );
   }

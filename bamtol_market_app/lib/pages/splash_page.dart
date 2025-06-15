@@ -1,9 +1,11 @@
 import 'package:bamtol_market_app/components/app_font.dart';
 import 'package:bamtol_market_app/components/getx_listener.dart';
+import 'package:bamtol_market_app/consts/authentication_status.dart';
 import 'package:bamtol_market_app/consts/step_type.dart';
 import 'package:bamtol_market_app/controllers/authentication_controller.dart';
 import 'package:bamtol_market_app/controllers/data_load_controller.dart';
 import 'package:bamtol_market_app/controllers/splash_controller.dart';
+import 'package:bamtol_market_app/utls/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -14,15 +16,26 @@ class SplashPage extends GetView<SplashController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: GetxListener<bool>(
-          listen: (bool isLogined) {
-            if (isLogined) {
-              Get.offNamed("/");
-            } else {
-              Get.offNamed("/login");
+        child: GetxListener<AuthenticationStatus>(
+          listen: (AuthenticationStatus status) {
+            logger.d("status: $status");
+            switch (status) {
+              case AuthenticationStatus.authentication:
+                Get.offNamed("/home");
+                break;
+              case AuthenticationStatus.unAuthenticated:
+                var userModel =
+                    Get.find<AuthenticationController>().userModel.value;
+                Get.offNamed("/signup/${userModel.uid}");
+                break;
+              case AuthenticationStatus.unknown:
+                Get.offNamed("/login");
+                break;
+              case AuthenticationStatus.init:
+                break;
             }
           },
-          stream: Get.find<AuthenticationController>().isLogined,
+          stream: Get.find<AuthenticationController>().status,
           child: GetxListener<bool>(
             listen: (bool value) {
               if (value) {
@@ -56,7 +69,7 @@ class SplashPage extends GetView<SplashController> {
 }
 
 class _SplashView extends GetView<SplashController> {
-  const _SplashView({super.key});
+  const _SplashView();
 
   @override
   Widget build(BuildContext context) {
