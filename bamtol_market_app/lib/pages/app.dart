@@ -8,12 +8,12 @@ class App extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _App();
+    return _AppState();
   }
 }
 
-class _App extends State<App> {
-  late bool isInitStarted;
+class _AppState extends State<App> {
+  bool isInitStarted = true;
 
   @override
   void initState() {

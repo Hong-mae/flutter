@@ -1,5 +1,10 @@
+import 'package:bamtol_market_app/controllers/authentication_controller.dart';
+import 'package:bamtol_market_app/controllers/data_load_controller.dart';
 import 'package:bamtol_market_app/firebase_options.dart';
 import 'package:bamtol_market_app/pages/app.dart';
+import 'package:bamtol_market_app/controllers/splash_controller.dart';
+import 'package:bamtol_market_app/pages/home_page.dart';
+import 'package:bamtol_market_app/pages/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -31,7 +36,17 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xff212123),
       ),
-      getPages: [GetPage(name: '/', page: () => const App())],
+      initialBinding: BindingsBuilder(() {
+        Get.put(SplashController());
+
+        Get.put(DataLoadController());
+        Get.put(AuthenticationController());
+      }),
+      getPages: [
+        GetPage(name: '/', page: () => const App()),
+        GetPage(name: "/home", page: () => const HomePage()),
+        GetPage(name: '/login', page: () => const LoginPage()),
+      ],
     );
   }
 }
