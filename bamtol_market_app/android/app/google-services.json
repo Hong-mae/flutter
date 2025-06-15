@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "1060292158063",
+    "project_id": "bamtol-market-hongmae",
+    "storage_bucket": "bamtol-market-hongmae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060292158063:android:e02bdf2acfac4919da239a",
+        "android_client_info": {
+          "package_name": "com.hongmae.bamtol_market_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060292158063-2ed0rnuecltnuoelsrciaf9asi3d1nv5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hongmae.bamtol_market_app",
+            "certificate_hash": "0a2e1daabe3cabd82918566cb72766519fb14855"
+          }
+        },
+        {
+          "client_id": "1060292158063-er2mcmq7r20u4jm4ttubdd45359lfmm1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hongmae.bamtol_market_app",
+            "certificate_hash": "035d88ca53723f04978f5d6c36f2b35f68acfc8e"
+          }
+        },
+        {
+          "client_id": "1060292158063-jetsl801h4ii411ddhcuh5nm21n6fnbm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hongmae.bamtol_market_app",
+            "certificate_hash": "556b5c58aeebbc9fc1a5d687d0b41aa73712c08c"
+          }
+        },
+        {
+          "client_id": "1060292158063-9oaeeq1flr42ug4jiko4pvojng2n3j7n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWJ2Yk7wXc32PF-josZVuexMRp-WWwqak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060292158063-9oaeeq1flr42ug4jiko4pvojng2n3j7n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1060292158063-hi3mm1lefl2i2j54fv3crotn9u0fcbjf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hongmae.bamtolMarketApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060292158063:android:35ccccd22964275fda239a",
+        "android_client_info": {
+          "package_name": "com.hongmae.cloneapp.bamtol_market_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060292158063-9oaeeq1flr42ug4jiko4pvojng2n3j7n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWJ2Yk7wXc32PF-josZVuexMRp-WWwqak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060292158063-9oaeeq1flr42ug4jiko4pvojng2n3j7n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1060292158063-hi3mm1lefl2i2j54fv3crotn9u0fcbjf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hongmae.bamtolMarketApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
