@@ -1,5 +1,6 @@
 import 'package:bamtol_market_app/src/user/model/user_model.dart';
 import 'package:bamtol_market_app/src/user/repository/user_repository.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class SignupController extends GetxController {

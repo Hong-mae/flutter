@@ -17,6 +17,7 @@ class SplashPage extends GetView<SplashController> {
       body: Center(
         child: GetxListener<AuthenticationStatus>(
           listen: (AuthenticationStatus status) {
+            debugPrint("status: $status}");
             switch (status) {
               case AuthenticationStatus.authentication:
                 Get.offNamed("/home");
@@ -62,17 +63,12 @@ class SplashPage extends GetView<SplashController> {
           ),
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     controller.loadStep(StepType.authCheck);
-      //   },
-      // ),
     );
   }
 }
 
 class _SplashView extends GetView<SplashController> {
-  const _SplashView();
+  const _SplashView({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -27,7 +27,10 @@ class SignupPage extends GetWidget<SignupController> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: '닉네임',
-                  errorText: controller.isPossibleUseNickName.value ? null : '이미 존재하는 닉네임입니다.',
+                  errorText:
+                      controller.isPossibleUseNickName.value
+                          ? null
+                          : '이미 존재하는 닉네임입니다.',
                   hintStyle: const TextStyle(color: Color(0xff6d7179)),
                   focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xff6d7179)),
@@ -38,7 +41,7 @@ class SignupPage extends GetWidget<SignupController> {
                 ),
                 onChanged: controller.changeNickName,
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -48,25 +51,27 @@ class SignupPage extends GetWidget<SignupController> {
           vertical: 20 + MediaQuery.of(context).padding.bottom,
         ),
         child: Obx(
-            () => Btn(
-              onTap: () async {
-                if(!controller.isPossibleUseNickName.value) return;
-
-                var result = await controller.signup();
-                if(result != null) {
-                  Get.offNamed("/");
-                }
-              },
-              padding: const EdgeInsets.symmetric(vertical: 17),
-              color: controller.isPossibleUseNickName.value ? const Color(0xffed7738) : Colors.grey.withValues(alpha: 0.9),
-              child: const AppFont(
-                text: "회원 가입",
-                align: TextAlign.center,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          () => Btn(
+            onTap: () async {
+              if (!controller.isPossibleUseNickName.value) return;
+              var result = controller.signup();
+              if (result != null) {
+                Get.offNamed("/");
+              }
+            },
+            padding: const EdgeInsets.symmetric(vertical: 17),
+            color:
+                controller.isPossibleUseNickName.value
+                    ? const Color(0xffed7738)
+                    : Colors.grey.withValues(alpha: 0.9),
+            child: const AppFont(
+              text: "회원 가입",
+              align: TextAlign.center,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-        )
+          ),
+        ),
       ),
     );
   }

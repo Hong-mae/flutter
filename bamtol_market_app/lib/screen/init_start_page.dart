@@ -43,7 +43,7 @@ class InitStartPage extends StatelessWidget {
           bottom: 25 + Get.mediaQuery.padding.bottom,
         ),
         child: GestureDetector(
-          onTap: () {},
+          onTap: onStart,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(7),
             child: Btn(
