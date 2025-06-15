@@ -18,12 +18,13 @@ class GetxListener<T> extends StatefulWidget {
   });
 
   @override
-  State<GetxListener<T>> createState() => _GetxListenerState();
+  State<GetxListener> createState() {
+    stream.listen(listen);
+    return _GetxListenerState();
+  }
 }
 
-class _GetxListenerState<T> extends State<GetxListener<T>> {
-  late final StreamSubscription<T> _subscription;
-
+class _GetxListenerState extends State<GetxListener> {
   @override
   void initState() {
     super.initState();
@@ -31,14 +32,6 @@ class _GetxListenerState<T> extends State<GetxListener<T>> {
     if (widget.initCall != null) {
       widget.initCall!();
     }
-
-    _subscription = widget.stream.listen(widget.listen);
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
   }
 
   @override

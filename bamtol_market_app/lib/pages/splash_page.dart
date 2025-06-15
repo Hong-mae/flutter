@@ -4,6 +4,7 @@ import 'package:bamtol_market_app/consts/step_type.dart';
 import 'package:bamtol_market_app/controllers/authentication_controller.dart';
 import 'package:bamtol_market_app/controllers/data_load_controller.dart';
 import 'package:bamtol_market_app/controllers/splash_controller.dart';
+import 'package:bamtol_market_app/utls/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -26,7 +27,7 @@ class SplashPage extends GetView<SplashController> {
           child: GetxListener<bool>(
             listen: (bool value) {
               if (value) {
-                controller.loadStep(StepType.dataLoad);
+                controller.loadStep(StepType.authCheck);
               }
             },
             stream: Get.find<DataLoadController>().isDataLoad,
@@ -34,7 +35,9 @@ class SplashPage extends GetView<SplashController> {
               initCall: () {
                 controller.loadStep(StepType.dataLoad);
               },
-              listen: (StepType value) {
+              listen: (StepType? value) {
+                if (value == null) return;
+
                 switch (value) {
                   case StepType.init:
                   case StepType.dataLoad:
@@ -51,12 +54,17 @@ class SplashPage extends GetView<SplashController> {
           ),
         ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     controller.loadStep(StepType.authCheck);
+      //   },
+      // ),
     );
   }
 }
 
 class _SplashView extends GetView<SplashController> {
-  const _SplashView({super.key});
+  const _SplashView();
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +73,7 @@ class _SplashView extends GetView<SplashController> {
         const SizedBox(height: 200),
         Expanded(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
                 width: 99,
